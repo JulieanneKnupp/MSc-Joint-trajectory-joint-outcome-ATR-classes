@@ -1,0 +1,312 @@
+
+# set working directory (location of data) 
+set.wd(…)
+# open package 
+library(lcmm)
+# set the seed for random number generator, so results can be 
+# reproduced:
+set.seed(2002)
+library(readxl)
+FES_PANSS_long_format <- read_excel("FES_PANSS_long_format.xlsx")
+View(FES_PANSS_long_format)
+
+FES_PANSS_long_format$PANSSP_scores <- as.numeric(FES_PANSS_long_format$PANSSP_scores)
+FES_PANSS_long_format$PANSSN_scores <- as.numeric(FES_PANSS_long_format$PANSSN_scores)
+FES_PANSS_long_format$PANSSG_scores <- as.numeric(FES_PANSS_long_format$PANSSG_scores)
+FES_PANSS_long_format$PANSST_scores <- as.numeric(FES_PANSS_long_format$PANSST_scores)
+
+1.1.1 LCGA with lcmm for PANSS_P
+# run models with 1-6 classes, each with 100 random starts, 
+# using the 1-class model to set initial start values:
+#argument subject must be numeric
+#replaced via excel
+
+lcga1 <- hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID", ng = 1, data = FES_PANSS_long_format) 
+lcga2 <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 2, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS)) 
+lcga3 <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 3, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+lcga4 <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 4, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+lcga5 <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 5, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+lcga6 <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 6, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+# make table with results for the 4 models: 
+summarytable(lcga1, lcga2, lcga3, lcga4, lcga5, lcga6)
+
+1.1.2 PANSS_N
+lcga1_N <- hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", ng = 1, data = FES_PANSS_long_format) 
+lcga2_N <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 2, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS)) 
+lcga3_N <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 3, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+lcga4_N <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 4, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+lcga5_N <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 5, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+lcga6_N <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 6, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+# make table with results for the 4 models: 
+summarytable(lcga1_N, lcga2_N, lcga3_N, lcga4_N, lcga5_N, lcga6_N)
+
+1.1.3 PANSS_G
+lcga1_G <- hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID", ng = 1, data = FES_PANSS_long_format) 
+lcga2_G <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 2, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS)) 
+lcga3_G <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 3, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+lcga4_G <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 4, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+lcga5_G <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 5, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+lcga6_G <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 6, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+# make table with results for the 4 models: 
+summarytable(lcga1_G, lcga2_G, lcga3_G, lcga4_G, lcga5_G, lcga6_G)
+
+#1.1.4 PANSS_T
+#lcga1_T <- hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID", ng = 1, data = FES_PANSS_long_format) 
+#lcga2_T <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 2, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS)) 
+#lcga3_T <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 3, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+#lcga4_T <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 4, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+#lcga5_T <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 5, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+#lcga6_T <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 6, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+# make table with results for the 4 models: 
+#summarytable(lcga1_T, lcga2_T, lcga3_T, lcga4_T, lcga5_T, lcga6_T)
+
+
+2.1.1 GMM in lcmm with only random intercept for PANSS_P
+set.seed(2002)
+
+#PANSST_scores ~ Weeks_PANSS, subject = "SampleID", ng = 1, data = FES_PANSS_long_format) 
+#lcga2_T <- gridsearch(rep = 100, maxiter = 10, minit = lcga1,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID",
+ng = 2, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS))
+
+gmm1_P <- hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID", random=~1, ng = 1, data = FES_PANSS_long_format)
+gmm2_P <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_P, hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 2, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm3_P <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_P,
+hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 3, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm4_P <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_P,
+hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 4, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm5_P <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_P,
+hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 5, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm6_P <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_P,
+hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 6, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+# make table with results for the 4 models: 
+summarytable(gmm1_P, gmm2_P, gmm3_P, gmm4_P, gmm5_P, gmm6_P)
+
+2.1.2 PANSS_N
+
+gmm1_N <- hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1, ng = 1, data = FES_PANSS_long_format)
+gmm2_N <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_N, hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 2, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm3_N <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_N,
+hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 3, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm4_N <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_N,
+hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 4, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm5_N <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_N,
+hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 5, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm6_N <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_N,
+hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 6, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+# make table with results for the 4 models: 
+summarytable(gmm1_N, gmm2_N, gmm3_N, gmm4_N, gmm5_N, gmm6_N)
+
+2.1.3 PANSS_G
+gmm1_G <- hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID", random=~1, ng = 1, data = FES_PANSS_long_format)
+gmm2_G <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_G, hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 2, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm3_G <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_G,
+hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 3, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm4_G <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_G,
+hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 4, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm5_G <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_G,
+hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 5, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm6_G <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_G,
+hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 6, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+# make table with results for the 4 models: 
+summarytable(gmm1_G, gmm2_G, gmm3_G, gmm4_G, gmm5_G, gmm6_G)
+
+
+#2.1.4 PANSS_T
+#gmm1_T <- hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1, ng = 1, data = FES_PANSS_long_format)
+#gmm2_T <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_T, hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 2, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+#gmm3_T <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_T,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 3, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+#gmm4_T <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_T,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 4, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+#gmm5_T <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_T,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 5, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+#gmm6_T <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_T,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID", random=~1,
+ng = 6, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+# make table with results for the 4 models: 
+#summarytable(gmm1_T, gmm2_T, gmm3_T, gmm4_T, gmm5_T, gmm6_T)
+
+
+2.2.1 GMM in lcmm with both random intercepts and slopes PANSS_P
+gmm1_2P <- hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS, ng = 1, data = FES_PANSS_long_format)
+gmm2_2P <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2P, hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 2, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm3_2P <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2P,
+hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 3, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm4_2P <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2P,
+hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 4, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm5_2P <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2P,
+hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 5, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm6_2P <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2P,
+hlme(PANSSP_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 6, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+# make table with results for the 4 models: 
+summarytable(gmm1_2P, gmm2_2P, gmm3_2P, gmm4_2P, gmm5_2P, gmm6_2P)
+
+2.2.2 PANSS_N
+
+gmm1_2N <- hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS, ng = 1, data = FES_PANSS_long_format)
+gmm2_2N <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2N, hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 2, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm3_2N <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2N,
+hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 3, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm4_2N <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2N,
+hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 4, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm5_2N <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2N,
+hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 5, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm6_2N <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2N,
+hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 6, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+# make table with results for the 4 models: 
+summarytable(gmm1_2N, gmm2_2N, gmm3_2N, gmm4_2N, gmm5_2N, gmm6_2N)
+
+2.2.3 PANSS_G
+gmm1_2G <- hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS, ng = 1, data = FES_PANSS_long_format)
+gmm2_2G <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2G, hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 2, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm3_2G <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2G,
+hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 3, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm4_2G <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2G,
+hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 4, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm5_2G <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2G,
+hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 5, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+gmm6_2G <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2G,
+hlme(PANSSG_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 6, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+# make table with results for the 4 models: 
+summarytable(gmm1_2G, gmm2_2G, gmm3_2G, gmm4_2G, gmm5_2G, gmm6_2G)
+
+
+#2.2.4 PANSS_T
+#gmm1_2T <- hlme(PANSSN_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS, ng = 1, data = FES_PANSS_long_format)
+#gmm2_2T <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2T, hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 2, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+#gmm3_2T <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2T,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 3, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+#gmm4_2T <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2T,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 4, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+#gmm5_2T <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2T,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 5, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+#gmm6_2T <- gridsearch(rep = 100, maxiter = 10, minit = gmm1_2T,
+hlme(PANSST_scores ~ Weeks_PANSS, subject = "SampleID", random=~1 + Weeks_PANSS,
+ng = 6, data = FES_PANSS_long_format, mixture = ~ Weeks_PANSS, nwg=T))
+# make table with results for the 4 models: 
+#summarytable(gmm1_2T, gmm2_2T, gmm3_2T, gmm4_2T, gmm5_2T, gmm6_2T)
+
+#To get assigned individuals of optimal clusters:
+#For LCGA P
+lcgap <- lcga4[["pprob"]]
+lcgap <- lcgap[1:2]
+write.csv(lcgap, file = "lcgap_4.csv")
+
+#For LCGA N
+lcgan <- lcga6_N[["pprob"]]
+lcgan <- lcgan[1:2]
+write.csv(lcgan, file = "lcgan_6.csv")
+
+#For LCGA G
+lcgag <- lcga5_G[["pprob"]]
+lcgag <- lcgag[1:2]
+write.csv(lcgag, file = "lcgag_5.csv")
+
+#For GMM 1 P
+gmm1p <- gmm2_P[["pprob"]]
+gmm1p <- gmm1p[1:2]
+write.csv(gmm1p, file = "gmm1p_2.csv")
+
+#For GMM 1 N
+gmm1n <- gmm3_N[["pprob"]]
+gmm1n <- gmm1n[1:2]
+write.csv(gmm1n, file = "gmm1n_3.csv")
+
+#For GMM 1 G
+gmm1g <- gmm2_G[["pprob"]]
+gmm1g <- gmm1g[1:2]
+write.csv(gmm1g, file = "gmm1g_2.csv")
+
+#For GMM 2 P
+gmm2p <- gmm2_2P[["pprob"]]
+gmm2p <- gmm2p[1:2]
+write.csv(gmm2p, file = "gmm2p_2.csv")
+
+#For GMM 2 N
+gmm2n <- gmm2_2N[["pprob"]]
+gmm2n <- gmm2n[1:2]
+write.csv(gmm2n, file = "gmm2n_2.csv")
+
+#For GMM 2 G
+gmm2g <- gmm2_2G[["pprob"]]
+gmm2g <- gmm2g[1:2]
+write.csv(gmm2g, file = "gmm2g_2.csv")

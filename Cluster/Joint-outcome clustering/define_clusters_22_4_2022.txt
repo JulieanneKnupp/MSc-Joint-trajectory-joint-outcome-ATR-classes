@@ -1,0 +1,14 @@
+X11(type="Xlib") 
+choice(cld3dFES1)
+
+select C3 (BIC2) & C5 (BIC)
+output clusters files 
+
+#open -Clusters in excel & save as excel
+
+
+clusters5 <- read_excel("cld3dFES1-C5-1-Clusters.xlsx")
+clusters5$idAll <- NULL
+traj <- cld3dFES1@traj
+calculTrajMean3d(traj, clusters5)
+

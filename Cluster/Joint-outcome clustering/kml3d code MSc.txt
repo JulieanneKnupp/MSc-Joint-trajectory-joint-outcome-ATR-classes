@@ -1,0 +1,46 @@
+#install.packages("kml3d")
+library(kml3d)
+#install.packages("readxl")
+library(readxl)
+FES <- read_excel("FES_long_ordered.xlsx")
+
+FES$PANSSP_4 <- as.numeric(FES$PANSSP_4)
+FES$PANSSP_6 <- as.numeric(FES$PANSSP_6)
+FES$PANSSP_12 <- as.numeric(FES$PANSSP_12)
+FES$PANSSP_24 <- as.numeric(FES$PANSSP_24)
+FES$PANSSP_36 <- as.numeric(FES$PANSSP_36)
+FES$PANSSP_48 <- as.numeric(FES$PANSSP_48)
+FES$PANSSN_48 <- as.numeric(FES$PANSSN_48)
+FES$PANSSN_36 <- as.numeric(FES$PANSSN_36)
+FES$PANSSN_24 <- as.numeric(FES$PANSSN_24)
+FES$PANSSN_12 <- as.numeric(FES$PANSSN_12)
+FES$PANSSN_6 <- as.numeric(FES$PANSSN_6)
+FES$PANSSN_4 <- as.numeric(FES$PANSSN_4)
+FES$PANSSG_4 <- as.numeric(FES$PANSSG_4)
+FES$PANSSG_6 <- as.numeric(FES$PANSSG_6)
+FES$PANSSG_12 <- as.numeric(FES$PANSSG_12)
+FES$PANSSG_24 <- as.numeric(FES$PANSSG_24)
+FES$PANSSG_36 <- as.numeric(FES$PANSSG_36)
+FES$PANSSG_48 <- as.numeric(FES$PANSSG_48)
+FES$PANSST_48 <- as.numeric(FES$PANSST_48)
+FES$PANSST_36 <- as.numeric(FES$PANSST_36)
+FES$PANSST_24 <- as.numeric(FES$PANSST_24)
+FES$PANSST_12 <- as.numeric(FES$PANSST_12)
+FES$PANSST_6 <- as.numeric(FES$PANSST_6)
+FES$PANSST_4 <- as.numeric(FES$PANSST_4)
+
+#RUN1: PANSSP, PANSSN, PANSSG, PANSST
+
+#cld3dFES <- cld3d(FES,time=c(0,2,4,6,12,24,36,48),timeInData=list(PANSSP=2:9,PANSSN=10:17,PANSSG=18:25,PANSST=26:33))
+#kml3d(cld3dFES)
+
+#X11(type="Xlib") #opens separate graphics window
+#choice(cld3dFES)
+
+FES <- as.data.frame(FES)
+#RUN2: PANSSP, PANSSN, PANSSG
+cld3dFES1 <- cld3d(FES,time=c(0,2,4,6,12,24,36,48),timeInData=list(PANSSP=2:9,PANSSN=10:17,PANSSG=18:25))
+kml3d(cld3dFES1)
+#opens separate graphics window
+X11(type="Xlib") 
+choice(cld3dFES1)
