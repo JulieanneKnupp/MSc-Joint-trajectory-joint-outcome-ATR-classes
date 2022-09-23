@@ -1,0 +1,56 @@
+## Visualizing clusters
+y_kmeans <- kmeans.kml3d1_4$cluster
+clusplot(kml3d1_km,
+         y_kmeans,
+         lines = 0,
+         shade = TRUE,
+         color = TRUE,
+         labels = 2,
+         plotchar = FALSE,
+         span = TRUE,
+         main = paste("Cluster kml3d1_4"),
+         )
+
+## Visualizing clusters against C & R
+y_kmeansCR <- kmeans.kml3d1_4$cluster
+clusplot(kml3d1_km [, c("C_5", "Relapse")],
+         y_kmeansCR,
+         lines = 0,
+         shade = TRUE,
+         color = TRUE,
+         labels = 2,
+         plotchar = FALSE,
+         span = TRUE,
+         main = paste("Cluster kml3d1_4"),
+	 xlab = 'C_5',
+	 ylab = 'Relapse')
+
+# Against C & E
+y_kmeansCE <- kmeans.kml3d1_4$cluster
+clusplot(kml3d1_km [, c("C_5", "EPSAE")],
+         y_kmeansCE,
+         lines = 0,
+         shade = TRUE,
+         color = TRUE,
+         labels = 2,
+         plotchar = FALSE,
+         span = TRUE,
+         main = paste("Cluster kml3d1_4"),
+	 xlab = 'C_5',
+	 ylab = 'EPSAE')
+
+
+
+#Against R & E
+y_kmeansRE <- kmeans.kml3d1_4$cluster
+clusplot(kml3d1_km [, c("Relapse", "EPSAE")],
+         y_kmeansRE,
+         lines = 0,
+         shade = TRUE,
+         color = TRUE,
+         labels = 2,
+         plotchar = FALSE,
+         span = TRUE,
+         main = paste("Cluster kml3d1_4"),
+	 xlab = 'Relapse',
+	 ylab = 'EPSAE')

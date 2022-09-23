@@ -1,0 +1,54 @@
+# Loading package
+library(ClusterR)
+library(cluster)
+library(readxl)
+
+#read in excel spreadsheet of cluster variables
+kml3d1_km <- read_excel("kml3d_BIC_2ndary_cluster_doc.xlsx")
+
+#removing excess rows
+kml3d1_km <- kml3d1_km[c(-104:-824),]
+
+#Remove ID column
+kml3d1_km["idAll"] <- NULL
+  
+# Fitting K-Means clustering Model 
+# to training dataset for 2 centers
+set.seed(240) # Setting seed
+kmeans.kml3d1_2 <- kmeans(kml3d1_km, centers = 2, nstart = 20)
+kmeans.kml3d1_2
+
+#for 3 centers
+kmeans.kml3d1_3 <- kmeans(kml3d1_km, centers = 3, nstart = 20)
+kmeans.kml3d1_3
+
+#for 4 centers
+kmeans.kml3d1_4 <- kmeans(kml3d1_km, centers = 4, nstart = 20)
+kmeans.kml3d1_4
+
+#for 5 centers
+kmeans.kml3d1_5 <- kmeans(kml3d1_km, centers = 5, nstart = 20)
+kmeans.kml3d1_5
+
+#for 6 centers
+kmeans.kml3d1_6 <- kmeans(kml3d1_km, centers = 6, nstart = 20)
+kmeans.kml3d1_6
+
+ 
+# Cluster identification for 
+# each observation
+kmeans.kml3d1_2$cluster
+kmeans.kml3d1_3$cluster
+kmeans.kml3d1_4$cluster
+kmeans.kml3d1_5$cluster
+kmeans.kml3d1_6$cluster
+
+#Identification of optimal clusters (recalcualtes kmeans and assesses)
+#for BIC
+opt_km_bic = Optimal_Clusters_KMeans(kml3d1_km, max_clusters = 6, criterion = "BIC", plot_clusters = TRUE)
+#for silhouette index
+opt_km_si = Optimal_Clusters_KMeans(kml3d1_km, max_clusters = 6, criterion = "silhouette", plot_clusters = TRUE)
+#for WCSSE
+opt_km_wcs = Optimal_Clusters_KMeans(kml3d1_km, max_clusters = 6, criterion = "WCSSE", plot_clusters = TRUE)
+
+write(kmeans.kml3d1_4$cluster, file = "kml3d_BIC_2.txt", ncolumns = 1, sep = " ")
