@@ -1,0 +1,748 @@
+#multinomial logistic regression for prediction of ATR classes, 
+#using PRS + baseline PANSS + CTQ (+age)
+#load necessary libraries
+library(ggplot2)
+library(foreign)
+library(nnet)
+library(reshape2)
+library(readxl)
+library(DescTools)
+library(AICcmodavg)
+library(GGally)
+
+#read in PRS, covariates and classes
+PRSc <- read_excel("PRS_cov_clusters1.xlsx")
+#convert to correct format
+PRSc$kml3d_BIC_4 <- factor(PRSc$kml3d_BIC_4)
+PRSc$Gender <- factor(PRSc$Gender)
+PRSc$Ethnic.group <- factor(PRSc$Ethnic.group)
+PRSc$PRSice2_T <- as.numeric(PRSc$PRSice2_T)
+PRSc$PRSice2_E <- as.numeric(PRSc$PRSice2_E)
+PRSc$PRSice_P <- as.numeric(PRSc$PRSice_P)
+PRSc$PRSice_N <- as.numeric(PRSc$PRSice_N)
+PRSc$PRSice_G <- as.numeric(PRSc$PRSice_G)
+PRSc$LDpred2 <- as.numeric(PRSc$LDpred2)
+PRSc$lassosum_T <- as.numeric(PRSc$lassosum_T)
+PRSc$Lasso_P <- as.numeric(PRSc$Lasso_P)
+PRSc$Lasso_N <- as.numeric(PRSc$Lasso_N)
+PRSc$Lasso_G <- as.numeric(PRSc$Lasso_G)
+PRSc$Lasso_E <- as.numeric(PRSc$Lasso_E)
+PRSc$PRS_CS <- as.numeric(PRSc$PRS_CS)
+PRSc$PRS_CSx <- as.numeric(PRSc$PRS_CSx)
+PRSc$african_san <- as.numeric(PRSc$african_san)
+PRSc$african_non_san <- as.numeric(PRSc$african_non_san)
+PRSc$european <- as.numeric(PRSc$european)
+PRSc$south_asian <- as.numeric(PRSc$south_asian)
+PRSc$east_asian <- as.numeric(PRSc$east_asian)
+PRSc$CTQ_total_score <- as.numeric(PRSc$CTQ_total_score)
+PRSc$CTQ_EA <- as.numeric(PRSc$CTQ_EA)
+PRSc$CTQ_PA <- as.numeric(PRSc$CTQ_PA)
+PRSc$CTQ_SA <- as.numeric(PRSc$CTQ_SA)
+PRSc$CTQ_EN <- as.numeric(PRSc$CTQ_EN)
+PRSc$CTQ_PN <- as.numeric(PRSc$CTQ_PN)
+PRSc$PANSSP_baseline <- as.numeric(PRSc$PANSSP_baseline)
+PRSc$PANSSN_baseline <- as.numeric(PRSc$PANSSN_baseline)
+PRSc$PANSSG_baseline <- as.numeric(PRSc$PANSSG_baseline)
+PRSc$PANSST_baseline <- as.numeric(PRSc$PANSST_baseline)
+
+#set reference class
+PRSc$prog <- relevel(PRSc$kml3d_BIC_4, ref = "A")
+
+#ALL MODELS
+#PRS AND CTQ_T
+#A)ldpred + all CTQ(5)
+ldpred_ctq5 <- multinom(prog ~ scale(LDpred2) + scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctq5_summary <- summary(ldpred_ctq5)
+z_ldpred_ctq5 <- summary(ldpred_ctq5)$coefficients/summary(ldpred_ctq5)$standard.errors
+p_ldpred_ctq5 <- (1-pnorm(abs(z_ldpred_ctq5), 0, 1))*2
+
+#B)ldpred +  CTQ_T
+ldpred_ctqT <- multinom(prog ~ scale(LDpred2) + scale(CTQ_total_score), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqT_summary <- summary(ldpred_ctqT)
+z_ldpred_ctqT <- summary(ldpred_ctqT)$coefficients/summary(ldpred_ctqT)$standard.errors
+p_ldpred_ctqT <- (1-pnorm(abs(z_ldpred_ctqT), 0, 1))*2
+
+
+#E)ldpred + CTQ_SA
+ldpred_ctqSA <- multinom(prog ~ scale(LDpred2) + scale(CTQ_SA), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqSA_summary <- summary(ldpred_ctqSA)
+z_ldpred_ctqSA <- summary(ldpred_ctqSA)$coefficients/summary(ldpred_ctqSA)$standard.errors
+p_ldpred_ctqSA <- (1-pnorm(abs(z_ldpred_ctqSA), 0, 1))*2
+
+#F)ldpred + CTQ_PA
+ldpred_ctqPA <- multinom(prog ~ scale(LDpred2) + scale(CTQ_PA), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqPA_summary <- summary(ldpred_ctqPA)
+z_ldpred_ctqPA <- summary(ldpred_ctqPA)$coefficients/summary(ldpred_ctqPA)$standard.errors
+p_ldpred_ctqPA <- (1-pnorm(abs(z_ldpred_ctqPA), 0, 1))*2
+
+#PRS AND BASELINE
+#H)ldpred +PANSS_T
+ldpred_pT <- multinom(prog ~ scale(LDpred2) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+ldpred_pT_summary <- summary(ldpred_pT)
+z_ldpred_pT <- summary(ldpred_pT)$coefficients/summary(ldpred_pT)$standard.errors
+p_ldpred_pT <- (1-pnorm(abs(z_ldpred_pT), 0, 1))*2
+
+#I)ldpred + PANSS(3)
+ldpred_p3 <- multinom(prog ~ scale(LDpred2) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+ldpred_p3_summary <- summary(ldpred_p3)
+z_ldpred_p3 <- summary(ldpred_p3)$coefficients/summary(ldpred_p3)$standard.errors
+p_ldpred_p3 <- (1-pnorm(abs(z_ldpred_p3), 0, 1))*2
+
+#J)ldpred + PANSS_P
+ldpred_pP <- multinom(prog ~ scale(LDpred2) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+ldpred_pP_summary <- summary(ldpred_pP)
+z_ldpred_pP <- summary(ldpred_pP)$coefficients/summary(ldpred_pP)$standard.errors
+p_ldpred_pP <- (1-pnorm(abs(z_ldpred_pP), 0, 1))*2
+
+#K)ldpred + PANSS_N
+ldpred_pN <- multinom(prog ~ scale(LDpred2) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+ldpred_pN_summary <- summary(ldpred_pN)
+z_ldpred_pN <- summary(ldpred_pN)$coefficients/summary(ldpred_pN)$standard.errors
+p_ldpred_pN <- (1-pnorm(abs(z_ldpred_pN), 0, 1))*2
+
+#L)ldpred + PANSS_G
+ldpred_pG <- multinom(prog ~ scale(LDpred2) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+ldpred_pG_summary <- summary(ldpred_pG)
+z_ldpred_pG <- summary(ldpred_pG)$coefficients/summary(ldpred_pG)$standard.errors
+p_ldpred_pG <- (1-pnorm(abs(z_ldpred_pG), 0, 1))*2
+
+#M)ldpred + PANSS P + N
+ldpred_pPN <- multinom(prog ~ scale(LDpred2) + scale(PANSSP_baseline) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+ldpred_pPN_summary <- summary(ldpred_pPN)
+z_ldpred_pPN <- summary(ldpred_pPN)$coefficients/summary(ldpred_pPN)$standard.errors
+p_ldpred_pPN <- (1-pnorm(abs(z_ldpred_pPN), 0, 1))*2
+
+#N)ldpred + PANSS P +G
+ldpred_pPG <- multinom(prog ~ scale(LDpred2) + scale(PANSSP_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+ldpred_pPG_summary <- summary(ldpred_pPG)
+z_ldpred_pPG <- summary(ldpred_pPG)$coefficients/summary(ldpred_pPG)$standard.errors
+p_ldpred_pPG <- (1-pnorm(abs(z_ldpred_pPG), 0, 1))*2
+
+#O)ldpred + PANSS N +G
+ldpred_pNG <- multinom(prog ~ scale(LDpred2) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+ldpred_pNG_summary <- summary(ldpred_pNG)
+z_ldpred_pNG <- summary(ldpred_pNG)$coefficients/summary(ldpred_pNG)$standard.errors
+p_ldpred_pNG <- (1-pnorm(abs(z_ldpred_pNG), 0, 1))*2
+
+#BASELINE
+#P)PANSST
+pT <- multinom(prog ~ scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+pT_summary <- summary(pT)
+z_pT <- summary(pT)$coefficients/summary(pT)$standard.errors
+p_pT <- (1-pnorm(abs(z_pT), 0, 1))*2
+
+#Q)PANSS(3)
+p3 <- multinom(prog ~ scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+p3_summary <- summary(p3)
+z_p3 <- summary(p3)$coefficients/summary(p3)$standard.errors
+p_p3 <- (1-pnorm(abs(z_p3), 0, 1))*2
+
+#R)PANSS P
+pP <- multinom(prog ~ scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+pP_summary <- summary(pP)
+z_pP <- summary(pP)$coefficients/summary(pP)$standard.errors
+p_pP <- (1-pnorm(abs(z_pP), 0, 1))*2
+
+#S)PANSS N
+pN <- multinom(prog ~ scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+pN_summary <- summary(pN)
+z_pN <- summary(pN)$coefficients/summary(pN)$standard.errors
+p_pN <- (1-pnorm(abs(z_pN), 0, 1))*2
+
+#T)PANSS G
+pG <- multinom(prog ~ scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+pG_summary <- summary(pG)
+z_pG <- summary(pG)$coefficients/summary(pG)$standard.errors
+p_pG <- (1-pnorm(abs(z_pG), 0, 1))*2
+
+#U)PANSS P+N
+pPN <- multinom(prog ~ scale(PANSSP_baseline) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+pPN_summary <- summary(pPN)
+z_pPN <- summary(pPN)$coefficients/summary(pPN)$standard.errors
+p_pPN <- (1-pnorm(abs(z_pPN), 0, 1))*2
+
+#V)PANSS P+G
+pPG <- multinom(prog ~ scale(PANSSP_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+pPG_summary <- summary(pPG)
+z_pPG <- summary(pPG)$coefficients/summary(pPG)$standard.errors
+p_pPG <- (1-pnorm(abs(z_pPG), 0, 1))*2
+
+#W)PANSS N+G
+pNG <- multinom(prog ~ scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+pNG_summary <- summary(pNG)
+z_pNG <- summary(pNG)$coefficients/summary(pNG)$standard.errors
+p_pNG <- (1-pnorm(abs(z_pNG), 0, 1))*2
+
+#CTQ
+#X)CTQ_T
+ctqT <- multinom(prog ~ scale(CTQ_total_score), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqT_summary <- summary(ctqT)
+z_ctqT <- summary(ctqT)$coefficients/summary(ctqT)$standard.errors
+p_ctqT <- (1-pnorm(abs(z_ctqT), 0, 1))*2
+
+#Y)CTQ(5)
+ctq5 <- multinom(prog ~ scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctq5_summary <- summary(ctq5)
+z_ctq5 <- summary(ctq5)$coefficients/summary(ctq5)$standard.errors
+p_ctq5 <- (1-pnorm(abs(z_ctq5), 0, 1))*2
+
+
+
+#BB)CTQ SA
+ctqSA <- multinom(prog ~ scale(CTQ_SA), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqSA_summary <- summary(ctqSA)
+z_ctqSA <- summary(ctqSA)$coefficients/summary(ctqSA)$standard.errors
+p_ctqSA <- (1-pnorm(abs(z_ctqSA), 0, 1))*2
+
+
+#DD)CTQ PA
+ctqPA <- multinom(prog ~ scale(CTQ_PA), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqPA_summary <- summary(ctqPA)
+z_ctqPA <- summary(ctqPA)$coefficients/summary(ctqPA)$standard.errors
+p_ctqPA <- (1-pnorm(abs(z_ctqPA), 0, 1))*2
+
+
+#CTQ AND BASELINE
+#EE)CTQtot + PANSST
+ctqT_pT <- multinom(prog ~ scale(CTQ_total_score) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqT_pT_summary <- summary(ctqT_pT)
+z_ctqT_pT <- summary(ctqT_pT)$coefficients/summary(ctqT_pT)$standard.errors
+p_ctqT_pT <- (1-pnorm(abs(z_ctqT_pT), 0, 1))*2
+
+#FF)CTQtot + PANSS(3)
+ctqT_p3 <- multinom(prog ~ scale(CTQ_total_score) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqT_p3_summary <- summary(ctqT_p3)
+z_ctqT_p3 <- summary(ctqT_p3)$coefficients/summary(ctqT_p3)$standard.errors
+p_ctqT_p3 <- (1-pnorm(abs(z_ctqT_p3), 0, 1))*2
+
+#GG)CTQ(5) + PANSST
+ctq5_pT <- multinom(prog ~ scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctq5_pT_summary <- summary(ctq5_pT)
+z_ctq5_pT <- summary(ctq5_pT)$coefficients/summary(ctq5_pT)$standard.errors
+p_ctq5_pT <- (1-pnorm(abs(z_ctq5_pT), 0, 1))*2
+
+
+#HH)CTQ(5) + PANSS(3)
+ctq5_p3 <- multinom(prog ~ scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctq5_p3_summary <- summary(ctq5_p3)
+z_ctq5_p3 <- summary(ctq5_p3)$coefficients/summary(ctq5_p3)$standard.errors
+p_ctq5_p3 <- (1-pnorm(abs(z_ctq5_p3), 0, 1))*2
+
+#II) CTQtot + PANSS P 
+ctqT_pP <- multinom(prog ~ scale(CTQ_total_score) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqT_pP_summary <- summary(ctqT_pP)
+z_ctqT_pP <- summary(ctqT_pP)$coefficients/summary(ctqT_pP)$standard.errors
+p_ctqT_pP <- (1-pnorm(abs(z_ctqT_pP), 0, 1))*2
+
+#JJ)CTQtot + PANSS N
+ctqT_pN <- multinom(prog ~ scale(CTQ_total_score) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqT_pN_summary <- summary(ctqT_pN)
+z_ctqT_pN <- summary(ctqT_pN)$coefficients/summary(ctqT_pN)$standard.errors
+p_ctqT_pN <- (1-pnorm(abs(z_ctqT_pN), 0, 1))*2
+
+KK) CTQtot + PANSS G
+ctqT_pG <- multinom(prog ~ scale(CTQ_total_score) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqT_pG_summary <- summary(ctqT_pG)
+z_ctqT_pG <- summary(ctqT_pG)$coefficients/summary(ctqT_pG)$standard.errors
+p_ctqT_pG <- (1-pnorm(abs(z_ctqT_pG), 0, 1))*2
+
+#LL)CTQ(5) + PANSS P
+ctq5_pP <- multinom(prog ~ scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctq5_pP_summary <- summary(ctq5_pP)
+z_ctq5_pP <- summary(ctq5_pP)$coefficients/summary(ctq5_pP)$standard.errors
+p_ctq5_pP <- (1-pnorm(abs(z_ctq5_pP), 0, 1))*2
+
+#NN)CTQ(5) + PANSS N
+ctq5_pN <- multinom(prog ~ scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctq5_pN_summary <- summary(ctq5_pN)
+z_ctq5_pN <- summary(ctq5_pN)$coefficients/summary(ctq5_pN)$standard.errors
+p_ctq5_pN <- (1-pnorm(abs(z_ctq5_pN), 0, 1))*2
+
+#MM)CTQ(5) + PANSS G
+ctq5_pG <- multinom(prog ~ scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctq5_pG_summary <- summary(ctq5_pG)
+z_ctq5_pG <- summary(ctq5_pG)$coefficients/summary(ctq5_pG)$standard.errors
+p_ctq5_pG <- (1-pnorm(abs(z_ctq5_pG), 0, 1))*2
+
+
+
+#UU)CTQ SA + PANSS P
+ctqSA_pP <- multinom(prog ~ scale(CTQ_SA) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqSA_pP_summary <- summary(ctqSA_pP)
+z_ctqSA_pP <- summary(ctqSA_pP)$coefficients/summary(ctqSA_pP)$standard.errors
+p_ctqSA_pP <- (1-pnorm(abs(z_ctqSA_pP), 0, 1))*2
+
+#VV)CTQ SA + PANSS N
+ctqSA_pN <- multinom(prog ~ scale(CTQ_SA) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqSA_pN_summary <- summary(ctqSA_pN)
+z_ctqSA_pN <- summary(ctqSA_pN)$coefficients/summary(ctqSA_pN)$standard.errors
+p_ctqSA_pN <- (1-pnorm(abs(z_ctqSA_pN), 0, 1))*2
+
+#WW)CTQ SA + PANSS G
+ctqSA_pG <- multinom(prog ~ scale(CTQ_SA) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqSA_pG_summary <- summary(ctqSA_pG)
+z_ctqSA_pG <- summary(ctqSA_pG)$coefficients/summary(ctqSA_pG)$standard.errors
+p_ctqSA_pG <- (1-pnorm(abs(z_ctqSA_pG), 0, 1))*2
+
+
+#AAA)CTQ PA + PANSS P
+ctqPA_pP <- multinom(prog ~ scale(CTQ_PA) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqPA_pP_summary <- summary(ctqPA_pP)
+z_ctqPA_pP <- summary(ctqPA_pP)$coefficients/summary(ctqPA_pP)$standard.errors
+p_ctqPA_pP <- (1-pnorm(abs(z_ctqPA_pP), 0, 1))*2
+
+#BBB)CTQ PA + PANSS N
+ctqPA_pN <- multinom(prog ~ scale(CTQ_PA) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqPA_pN_summary <- summary(ctqPA_pN)
+z_ctqPA_pN <- summary(ctqPA_pN)$coefficients/summary(ctqPA_pN)$standard.errors
+p_ctqPA_pN <- (1-pnorm(abs(z_ctqPA_pN), 0, 1))*2
+
+#CCC)CTQ PA + PANSS G
+ctqPA_pG <- multinom(prog ~ scale(CTQ_PA) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqPA_pG_summary <- summary(ctqPA_pG)
+z_ctqPA_pG <- summary(ctqPA_pG)$coefficients/summary(ctqPA_pG)$standard.errors
+p_ctqPA_pG <- (1-pnorm(abs(z_ctqPA_pG), 0, 1))*2
+
+
+#FFF)CTQ SA + PANSST
+ctqSA_pT <- multinom(prog ~ scale(CTQ_SA) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqSA_pT_summary <- summary(ctqSA_pT)
+z_ctqSA_pT <- summary(ctqSA_pT)$coefficients/summary(ctqSA_pT)$standard.errors
+p_ctqSA_pT <- (1-pnorm(abs(z_ctqSA_pT), 0, 1))*2
+
+
+#HHH)CTQ PA + PANSST
+ctqPA_pT <- multinom(prog ~ scale(CTQ_PA) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqPA_pT_summary <- summary(ctqPA_pT)
+z_ctqPA_pT <- summary(ctqPA_pT)$coefficients/summary(ctqPA_pT)$standard.errors
+p_ctqPA_pT <- (1-pnorm(abs(z_ctqPA_pT), 0, 1))*2
+
+
+#KKK)CTQ SA + PANSS(3)
+ctqSA_p3 <- multinom(prog ~ scale(CTQ_SA) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqSA_p3_summary <- summary(ctqSA_p3)
+z_ctqSA_p3 <- summary(ctqSA_p3)$coefficients/summary(ctqSA_p3)$standard.errors
+p_ctqSA_p3 <- (1-pnorm(abs(z_ctqSA_p3), 0, 1))*2
+
+
+#MMM)CTQ PA + PANSS(3)
+ctqPA_p3 <- multinom(prog ~ scale(CTQ_PA) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqPA_p3_summary <- summary(ctqPA_p3)
+z_ctqPA_p3 <- summary(ctqPA_p3)$coefficients/summary(ctqPA_p3)$standard.errors
+p_ctqPA_p3 <- (1-pnorm(abs(z_ctqPA_p3), 0, 1))*2
+
+
+#PRS AND CTQ AND BASELINE
+#NNN)ldpred + CTQtot + PANSST
+ldpred_ctqT_pT <- multinom(prog ~ scale(LDpred2) + scale(CTQ_total_score) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqT_pT_summary <- summary(ldpred_ctqT_pT)
+z_ldpred_ctqT_pT <- summary(ldpred_ctqT_pT)$coefficients/summary(ldpred_ctqT_pT)$standard.errors
+p_ldpred_ctqT_pT <- (1-pnorm(abs(z_ldpred_ctqT_pT), 0, 1))*2
+
+
+#OOO)ldpred + CTQtot + PANSS(3)
+ldpred_ctqT_p3 <- multinom(prog ~ scale(LDpred2) + scale(CTQ_total_score) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqT_p3_summary <- summary(ldpred_ctqT_p3)
+z_ldpred_ctqT_p3 <- summary(ldpred_ctqT_p3)$coefficients/summary(ldpred_ctqT_p3)$standard.errors
+p_ldpred_ctqT_p3 <- (1-pnorm(abs(z_ldpred_ctqT_p3), 0, 1))*2
+
+#PPP)ldpred + CTQtot + PANSS P
+ldpred_ctqT_pP <- multinom(prog ~ scale(LDpred2) + scale(CTQ_total_score) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqT_pP_summary <- summary(ldpred_ctqT_pP)
+z_ldpred_ctqT_pP <- summary(ldpred_ctqT_pP)$coefficients/summary(ldpred_ctqT_pP)$standard.errors
+p_ldpred_ctqT_pP <- (1-pnorm(abs(z_ldpred_ctqT_pP), 0, 1))*2
+
+#QQQ)ldpred + CTQtot + PANSS N
+ldpred_ctqT_pN <- multinom(prog ~ scale(LDpred2) + scale(CTQ_total_score) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqT_pN_summary <- summary(ldpred_ctqT_pN)
+z_ldpred_ctqT_pN <- summary(ldpred_ctqT_pN)$coefficients/summary(ldpred_ctqT_pN)$standard.errors
+p_ldpred_ctqT_pN <- (1-pnorm(abs(z_ldpred_ctqT_pN), 0, 1))*2
+
+#RRR)ldpred + CTQtot + PANSS G
+ldpred_ctqT_pG <- multinom(prog ~ scale(LDpred2) + scale(CTQ_total_score) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqT_pG_summary <- summary(ldpred_ctqT_pG)
+z_ldpred_ctqT_pG <- summary(ldpred_ctqT_pG)$coefficients/summary(ldpred_ctqT_pG)$standard.errors
+p_ldpred_ctqT_pG <- (1-pnorm(abs(z_ldpred_ctqT_pG), 0, 1))*2
+
+
+
+#SSS)ldpred + CTQ(5) + PANSST
+ldpred_ctq5_pT <- multinom(prog ~ scale(LDpred2) + scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctq5_pT_summary <- summary(ldpred_ctq5_pT)
+z_ldpred_ctq5_pT <- summary(ldpred_ctq5_pT)$coefficients/summary(ldpred_ctq5_pT)$standard.errors
+p_ldpred_ctq5_pT <- (1-pnorm(abs(z_ldpred_ctq5_pT), 0, 1))*2
+
+#TTT)ldpred2 + CTQ(5) + PANSS(3)
+ldpred_ctq5_p3 <- multinom(prog ~ scale(LDpred2) + scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctq5_p3_summary <- summary(ldpred_ctq5_p3)
+z_ldpred_ctq5_p3 <- summary(ldpred_ctq5_p3)$coefficients/summary(ldpred_ctq5_p3)$standard.errors
+p_ldpred_ctq5_p3 <- (1-pnorm(abs(z_ldpred_ctq5_p3), 0, 1))*2
+
+#UUU)ldpred2 + CTQ(5) + PANSS P
+ldpred_ctq5_pP <- multinom(prog ~ scale(LDpred2) + scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctq5_pP_summary <- summary(ldpred_ctq5_pP)
+z_ldpred_ctq5_pP <- summary(ldpred_ctq5_pP)$coefficients/summary(ldpred_ctq5_pP)$standard.errors
+p_ldpred_ctq5_pP <- (1-pnorm(abs(z_ldpred_ctq5_pP), 0, 1))*2
+
+#VVV)ldpred2 + CTQ(5) + PANSS N
+ldpred_ctq5_pN <- multinom(prog ~ scale(LDpred2) + scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctq5_pN_summary <- summary(ldpred_ctq5_pN)
+z_ldpred_ctq5_pN <- summary(ldpred_ctq5_pN)$coefficients/summary(ldpred_ctq5_pN)$standard.errors
+p_ldpred_ctq5_pN <- (1-pnorm(abs(z_ldpred_ctq5_pN), 0, 1))*2
+
+#WWW)ldpred2 + CTQ(5) + PANSS G
+ldpred_ctq5_pG <- multinom(prog ~ scale(LDpred2) + scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctq5_pG_summary <- summary(ldpred_ctq5_pG)
+z_ldpred_ctq5_pG <- summary(ldpred_ctq5_pG)$coefficients/summary(ldpred_ctq5_pG)$standard.errors
+p_ldpred_ctq5_pG <- (1-pnorm(abs(z_ldpred_ctq5_pG), 0, 1))*2
+
+
+#h)ldpred + CTQ SA + PANSST
+ldpred_ctqSA_pT <- multinom(prog ~ scale(LDpred2) + scale(CTQ_SA) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqSA_pT_summary <- summary(ldpred_ctqSA_pT)
+z_ldpred_ctqSA_pT <- summary(ldpred_ctqSA_pT)$coefficients/summary(ldpred_ctqSA_pT)$standard.errors
+p_ldpred_ctqSA_pT <- (1-pnorm(abs(z_ldpred_ctqSA_pT), 0, 1))*2
+
+#i)ldpred2 + CTQ SA + PANSS(3)
+ldpred_ctqSA_p3 <- multinom(prog ~ scale(LDpred2) + scale(CTQ_SA) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqSA_p3_summary <- summary(ldpred_ctqSA_p3)
+z_ldpred_ctqSA_p3 <- summary(ldpred_ctqSA_p3)$coefficients/summary(ldpred_ctqSA_p3)$standard.errors
+p_ldpred_ctqSA_p3 <- (1-pnorm(abs(z_ldpred_ctqSA_p3), 0, 1))*2
+
+#j)ldpred2 + CTQ SA + PANSS P
+ldpred_ctqSA_pP <- multinom(prog ~ scale(LDpred2) + scale(CTQ_SA) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqSA_pP_summary <- summary(ldpred_ctqSA_pP)
+z_ldpred_ctqSA_pP <- summary(ldpred_ctqSA_pP)$coefficients/summary(ldpred_ctqSA_pP)$standard.errors
+p_ldpred_ctqSA_pP <- (1-pnorm(abs(z_ldpred_ctqSA_pP), 0, 1))*2
+
+#k)ldpred2 + CTQ SA + PANSS N
+ldpred_ctqSA_pN <- multinom(prog ~ scale(LDpred2) + scale(CTQ_SA) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqSA_pN_summary <- summary(ldpred_ctqSA_pN)
+z_ldpred_ctqSA_pN <- summary(ldpred_ctqSA_pN)$coefficients/summary(ldpred_ctqSA_pN)$standard.errors
+p_ldpred_ctqSA_pN <- (1-pnorm(abs(z_ldpred_ctqSA_pN), 0, 1))*2
+
+#l)ldpred2 + CTQ SA + PANSS G
+ldpred_ctqSA_pG <- multinom(prog ~ scale(LDpred2) + scale(CTQ_SA) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqSA_pG_summary <- summary(ldpred_ctqSA_pG)
+z_ldpred_ctqSA_pG <- summary(ldpred_ctqSA_pG)$coefficients/summary(ldpred_ctqSA_pG)$standard.errors
+p_ldpred_ctqSA_pG <- (1-pnorm(abs(z_ldpred_ctqSA_pG), 0, 1))*2
+
+#r)ldpred + CTQ PA + PANSST
+ldpred_ctqPA_pT <- multinom(prog ~ scale(LDpred2) + scale(CTQ_PA) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqPA_pT_summary <- summary(ldpred_ctqPA_pT)
+z_ldpred_ctqPA_pT <- summary(ldpred_ctqPA_pT)$coefficients/summary(ldpred_ctqPA_pT)$standard.errors
+p_ldpred_ctqPA_pT <- (1-pnorm(abs(z_ldpred_ctqPA_pT), 0, 1))*2
+
+#s)ldpred2 + CTQ PA + PANSS(3)
+ldpred_ctqPA_p3 <- multinom(prog ~ scale(LDpred2) + scale(CTQ_PA) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqPA_p3_summary <- summary(ldpred_ctqPA_p3)
+z_ldpred_ctqPA_p3 <- summary(ldpred_ctqPA_p3)$coefficients/summary(ldpred_ctqPA_p3)$standard.errors
+p_ldpred_ctqPA_p3 <- (1-pnorm(abs(z_ldpred_ctqPA_p3), 0, 1))*2
+
+#t)ldpred2 + CTQ PA + PANSS P
+ldpred_ctqPA_pP <- multinom(prog ~ scale(LDpred2) + scale(CTQ_PA) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqPA_pP_summary <- summary(ldpred_ctqPA_pP)
+z_ldpred_ctqPA_pP <- summary(ldpred_ctqPA_pP)$coefficients/summary(ldpred_ctqPA_pP)$standard.errors
+p_ldpred_ctqPA_pP <- (1-pnorm(abs(z_ldpred_ctqPA_pP), 0, 1))*2
+
+#u)ldpred2 + CTQ PA + PANSS N
+ldpred_ctqPA_pN <- multinom(prog ~ scale(LDpred2) + scale(CTQ_PA) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqPA_pN_summary <- summary(ldpred_ctqPA_pN)
+z_ldpred_ctqPA_pN <- summary(ldpred_ctqPA_pN)$coefficients/summary(ldpred_ctqPA_pN)$standard.errors
+p_ldpred_ctqPA_pN <- (1-pnorm(abs(z_ldpred_ctqPA_pN), 0, 1))*2
+
+#v)ldpred2 + CTQ PA + PANSS G
+ldpred_ctqPA_pG <- multinom(prog ~ scale(LDpred2) + scale(CTQ_PA) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqPA_pG_summary <- summary(ldpred_ctqPA_pG)
+z_ldpred_ctqPA_pG <- summary(ldpred_ctqPA_pG)$coefficients/summary(ldpred_ctqPA_pG)$standard.errors
+p_ldpred_ctqPA_pG <- (1-pnorm(abs(z_ldpred_ctqPA_pG), 0, 1))*2
+
+
+#PRS_CS AND CTQ AND BASELINE
+#NNN)prsc_cs + CTQtot + PANSST
+prscs_ctqT_pT <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_total_score) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqT_pT_summary <- summary(prscs_ctqT_pT)
+z_prscs_ctqT_pT <- summary(prscs_ctqT_pT)$coefficients/summary(prscs_ctqT_pT)$standard.errors
+p_prscs_ctqT_pT <- (1-pnorm(abs(z_prscs_ctqT_pT), 0, 1))*2
+
+
+#OOO)prscs + CTQtot + PANSS(3)
+prscs_ctqT_p3 <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_total_score) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqT_p3_summary <- summary(prscs_ctqT_p3)
+z_prscs_ctqT_p3 <- summary(prscs_ctqT_p3)$coefficients/summary(prscs_ctqT_p3)$standard.errors
+p_prscs_ctqT_p3 <- (1-pnorm(abs(z_prscs_ctqT_p3), 0, 1))*2
+
+#PPP)prscs + CTQtot + PANSS P
+prscs_ctqT_pP <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_total_score) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqT_pP_summary <- summary(prscs_ctqT_pP)
+z_prscs_ctqT_pP <- summary(prscs_ctqT_pP)$coefficients/summary(prscs_ctqT_pP)$standard.errors
+p_prscs_ctqT_pP <- (1-pnorm(abs(z_prscs_ctqT_pP), 0, 1))*2
+
+#QQQ)prscs + CTQtot + PANSS N
+prscs_ctqT_pN <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_total_score) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqT_pN_summary <- summary(prscs_ctqT_pN)
+z_prscs_ctqT_pN <- summary(prscs_ctqT_pN)$coefficients/summary(prscs_ctqT_pN)$standard.errors
+p_prscs_ctqT_pN <- (1-pnorm(abs(z_prscs_ctqT_pN), 0, 1))*2
+
+#RRR)prscs + CTQtot + PANSS G
+prscs_ctqT_pG <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_total_score) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqT_pG_summary <- summary(prscs_ctqT_pG)
+z_prscs_ctqT_pG <- summary(prscs_ctqT_pG)$coefficients/summary(prscs_ctqT_pG)$standard.errors
+p_prscs_ctqT_pG <- (1-pnorm(abs(z_prscs_ctqT_pG), 0, 1))*2
+
+
+
+#SSS)prscs + CTQ(5) + PANSST
+prscs_ctq5_pT <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctq5_pT_summary <- summary(prscs_ctq5_pT)
+z_prscs_ctq5_pT <- summary(prscs_ctq5_pT)$coefficients/summary(prscs_ctq5_pT)$standard.errors
+p_prscs_ctq5_pT <- (1-pnorm(abs(z_prscs_ctq5_pT), 0, 1))*2
+
+#TTT)prscs + CTQ(5) + PANSS(3)
+prscs_ctq5_p3 <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctq5_p3_summary <- summary(prscs_ctq5_p3)
+z_prscs_ctq5_p3 <- summary(prscs_ctq5_p3)$coefficients/summary(prscs_ctq5_p3)$standard.errors
+p_prscs_ctq5_p3 <- (1-pnorm(abs(z_prscs_ctq5_p3), 0, 1))*2
+
+#UUU)prscs + CTQ(5) + PANSS P
+prscs_ctq5_pP <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctq5_pP_summary <- summary(prscs_ctq5_pP)
+z_prscs_ctq5_pP <- summary(prscs_ctq5_pP)$coefficients/summary(prscs_ctq5_pP)$standard.errors
+p_prscs_ctq5_pP <- (1-pnorm(abs(z_prscs_ctq5_pP), 0, 1))*2
+
+#VVV)prscs + CTQ(5) + PANSS N
+prscs_ctq5_pN <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctq5_pN_summary <- summary(prscs_ctq5_pN)
+z_prscs_ctq5_pN <- summary(prscs_ctq5_pN)$coefficients/summary(prscs_ctq5_pN)$standard.errors
+p_prscs_ctq5_pN <- (1-pnorm(abs(z_prscs_ctq5_pN), 0, 1))*2
+
+#WWW)prscs + CTQ(5) + PANSS G
+prscs_ctq5_pG <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctq5_pG_summary <- summary(prscs_ctq5_pG)
+z_prscs_ctq5_pG <- summary(prscs_ctq5_pG)$coefficients/summary(prscs_ctq5_pG)$standard.errors
+p_prscs_ctq5_pG <- (1-pnorm(abs(z_prscs_ctq5_pG), 0, 1))*2
+
+
+#h)prscs + CTQ SA + PANSST
+prscs_ctqSA_pT <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_SA) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqSA_pT_summary <- summary(prscs_ctqSA_pT)
+z_prscs_ctqSA_pT <- summary(prscs_ctqSA_pT)$coefficients/summary(prscs_ctqSA_pT)$standard.errors
+p_prscs_ctqSA_pT <- (1-pnorm(abs(z_prscs_ctqSA_pT), 0, 1))*2
+
+#i)prscs + CTQ SA + PANSS(3)
+prscs_ctqSA_p3 <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_SA) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqSA_p3_summary <- summary(prscs_ctqSA_p3)
+z_prscs_ctqSA_p3 <- summary(prscs_ctqSA_p3)$coefficients/summary(prscs_ctqSA_p3)$standard.errors
+p_prscs_ctqSA_p3 <- (1-pnorm(abs(z_prscs_ctqSA_p3), 0, 1))*2
+
+#j)prscs + CTQ SA + PANSS P
+prscs_ctqSA_pP <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_SA) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqSA_pP_summary <- summary(prscs_ctqSA_pP)
+z_prscs_ctqSA_pP <- summary(prscs_ctqSA_pP)$coefficients/summary(prscs_ctqSA_pP)$standard.errors
+p_prscs_ctqSA_pP <- (1-pnorm(abs(z_prscs_ctqSA_pP), 0, 1))*2
+
+#k)prscs + CTQ SA + PANSS N
+prscs_ctqSA_pN <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_SA) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqSA_pN_summary <- summary(prscs_ctqSA_pN)
+z_prscs_ctqSA_pN <- summary(prscs_ctqSA_pN)$coefficients/summary(prscs_ctqSA_pN)$standard.errors
+p_prscs_ctqSA_pN <- (1-pnorm(abs(z_prscs_ctqSA_pN), 0, 1))*2
+
+#l)ldpred2 + CTQ SA + PANSS G
+prscs_ctqSA_pG <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_SA) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqSA_pG_summary <- summary(prscs_ctqSA_pG)
+z_prscs_ctqSA_pG <- summary(prscs_ctqSA_pG)$coefficients/summary(prscs_ctqSA_pG)$standard.errors
+p_prscs_ctqSA_pG <- (1-pnorm(abs(z_prscs_ctqSA_pG), 0, 1))*2
+
+#r)prscs + CTQ PA + PANSST
+prscs_ctqPA_pT <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_PA) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqPA_pT_summary <- summary(prscs_ctqPA_pT)
+z_prscs_ctqPA_pT <- summary(prscs_ctqPA_pT)$coefficients/summary(prscs_ctqPA_pT)$standard.errors
+p_prscs_ctqPA_pT <- (1-pnorm(abs(z_prscs_ctqPA_pT), 0, 1))*2
+
+#s)prscs + CTQ PA + PANSS(3)
+prscs_ctqPA_p3 <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_PA) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqPA_p3_summary <- summary(prscs_ctqPA_p3)
+z_prscs_ctqPA_p3 <- summary(prscs_ctqPA_p3)$coefficients/summary(prscs_ctqPA_p3)$standard.errors
+p_prscs_ctqPA_p3 <- (1-pnorm(abs(z_prscs_ctqPA_p3), 0, 1))*2
+
+#t)prscs + CTQ PA + PANSS P
+prscs_ctqPA_pP <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_PA) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqPA_pP_summary <- summary(prscs_ctqPA_pP)
+z_prscs_ctqPA_pP <- summary(prscs_ctqPA_pP)$coefficients/summary(prscs_ctqPA_pP)$standard.errors
+p_prscs_ctqPA_pP <- (1-pnorm(abs(z_prscs_ctqPA_pP), 0, 1))*2
+
+#u)prscs + CTQ PA + PANSS N
+prscs_ctqPA_pN <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_PA) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqPA_pN_summary <- summary(prscs_ctqPA_pN)
+z_prscs_ctqPA_pN <- summary(prscs_ctqPA_pN)$coefficients/summary(prscs_ctqPA_pN)$standard.errors
+p_prscs_ctqPA_pN <- (1-pnorm(abs(z_prscs_ctqPA_pN), 0, 1))*2
+
+#v)prscs + CTQ PA + PANSS G
+prscs_ctqPA_pG <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_PA) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqPA_pG_summary <- summary(prscs_ctqPA_pG)
+z_prscs_ctqPA_pG <- summary(prscs_ctqPA_pG)$coefficients/summary(prscs_ctqPA_pG)$standard.errors
+p_prscs_ctqPA_pG <- (1-pnorm(abs(z_prscs_ctqPA_pG), 0, 1))*2
+
+#PRS AND CTQ_T
+#A)prscs + all CTQ(5)
+prscs_ctq5 <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_EN) + scale(CTQ_PN) + scale(CTQ_SA) + scale(CTQ_EA) + scale(CTQ_PA), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctq5_summary <- summary(prscs_ctq5)
+z_prscs_ctq5 <- summary(prscs_ctq5)$coefficients/summary(prscs_ctq5)$standard.errors
+p_prscs_ctq5 <- (1-pnorm(abs(z_prscs_ctq5), 0, 1))*2
+
+#B)prscs +  CTQ_T
+prscs_ctqT <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_total_score), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqT_summary <- summary(prscs_ctqT)
+z_prscs_ctqT <- summary(prscs_ctqT)$coefficients/summary(prscs_ctqT)$standard.errors
+p_prscs_ctqT <- (1-pnorm(abs(z_prscs_ctqT), 0, 1))*2
+
+
+#E)prscs + CTQ_SA
+prscs_ctqSA <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_SA), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqSA_summary <- summary(prscs_ctqSA)
+z_prscs_ctqSA <- summary(prscs_ctqSA)$coefficients/summary(prscs_ctqSA)$standard.errors
+p_prscs_ctqSA <- (1-pnorm(abs(z_prscs_ctqSA), 0, 1))*2
+
+#F)prscs + CTQ_PA
+prscs_ctqPA <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_PA), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqPA_summary <- summary(prscs_ctqPA)
+z_prscs_ctqPA <- summary(prscs_ctqPA)$coefficients/summary(prscs_ctqPA)$standard.errors
+p_prscs_ctqPA <- (1-pnorm(abs(z_prscs_ctqPA), 0, 1))*2
+
+#PRS AND BASELINE
+#H)ldpred +PANSS_T
+prscs_pT <- multinom(prog ~ scale(PRS_CS) + scale(PANSST_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+prscs_pT_summary <- summary(prscs_pT)
+z_prscs_pT <- summary(prscs_pT)$coefficients/summary(prscs_pT)$standard.errors
+p_prscs_pT <- (1-pnorm(abs(z_prscs_pT), 0, 1))*2
+
+#I)prscs + PANSS(3)
+prscs_p3 <- multinom(prog ~ scale(PRS_CS) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+prscs_p3_summary <- summary(prscs_p3)
+z_prscs_p3 <- summary(prscs_p3)$coefficients/summary(prscs_p3)$standard.errors
+p_prscs_p3 <- (1-pnorm(abs(z_prscs_p3), 0, 1))*2
+
+#J)prscs + PANSS_P
+prscs_pP <- multinom(prog ~ scale(PRS_CS) + scale(PANSSP_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+prscs_pP_summary <- summary(prscs_pP)
+z_prscs_pP <- summary(prscs_pP)$coefficients/summary(prscs_pP)$standard.errors
+p_prscs_pP <- (1-pnorm(abs(z_prscs_pP), 0, 1))*2
+
+#K)prscs + PANSS_N
+prscs_pN <- multinom(prog ~ scale(PRS_CS) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+prscs_pN_summary <- summary(prscs_pN)
+z_prscs_pN <- summary(prscs_pN)$coefficients/summary(prscs_pN)$standard.errors
+p_prscs_pN <- (1-pnorm(abs(z_prscs_pN), 0, 1))*2
+
+#L)prscs + PANSS_G
+prscs_pG <- multinom(prog ~ scale(PRS_CS) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+prscs_pG_summary <- summary(prscs_pG)
+z_prscs_pG <- summary(prscs_pG)$coefficients/summary(prscs_pG)$standard.errors
+p_prscs_pG <- (1-pnorm(abs(z_prscs_pG), 0, 1))*2
+
+#M)prscs + PANSS P + N
+prscs_pPN <- multinom(prog ~ scale(PRS_CS) + scale(PANSSP_baseline) + scale(PANSSN_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+prscs_pPN_summary <- summary(prscs_pPN)
+z_prscs_pPN <- summary(prscs_pPN)$coefficients/summary(prscs_pPN)$standard.errors
+p_prscs_pPN <- (1-pnorm(abs(z_prscs_pPN), 0, 1))*2
+
+#N)prscs + PANSS P +G
+prscs_pPG <- multinom(prog ~ scale(PRS_CS) + scale(PANSSP_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+prscs_pPG_summary <- summary(prscs_pPG)
+z_prscs_pPG <- summary(prscs_pPG)$coefficients/summary(prscs_pPG)$standard.errors
+p_prscs_pPG <- (1-pnorm(abs(z_prscs_pPG), 0, 1))*2
+
+#O)prscs + PANSS N +G
+prscs_pNG <- multinom(prog ~ scale(PRS_CS) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 600, MaxNWts = 2000) 
+prscs_pNG_summary <- summary(prscs_pNG)
+z_prscs_pNG <- summary(prscs_pNG)$coefficients/summary(prscs_pNG)$standard.errors
+p_prscs_pNG <- (1-pnorm(abs(z_prscs_pNG), 0, 1))*2
+
+
+#TOP MODELS with AGE
+#r)ldpred + CTQ PA + PANSST
+ldpred_ctqPA_pT_A <- multinom(prog ~ scale(LDpred2) + scale(CTQ_PA) + scale(PANSST_baseline) + scale(Age), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ldpred_ctqPA_pT_A_summary <- summary(ldpred_ctqPA_pT_A)
+z_ldpred_ctqPA_pT_A <- summary(ldpred_ctqPA_pT_A)$coefficients/summary(ldpred_ctqPA_pT_A)$standard.errors
+p_ldpred_ctqPA_pT_A <- (1-pnorm(abs(z_ldpred_ctqPA_pT_A), 0, 1))*2
+
+#MMM)CTQ PA + PANSS(3)
+ctqPA_p3_A <- multinom(prog ~ scale(CTQ_PA) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline) + scale(Age), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqPA_p3_A_summary <- summary(ctqPA_p3_A)
+z_ctqPA_p3_A <- summary(ctqPA_p3_A)$coefficients/summary(ctqPA_p3_A)$standard.errors
+p_ctqPA_p3_A <- (1-pnorm(abs(z_ctqPA_p3_A), 0, 1))*2
+
+#BBB)CTQ PA + PANSS N
+ctqPA_pN_A <- multinom(prog ~ scale(CTQ_PA) + scale(PANSSN_baseline) + scale(Age), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+ctqPA_pN_A_summary <- summary(ctqPA_pN_A)
+z_ctqPA_pN_A <- summary(ctqPA_pN_A)$coefficients/summary(ctqPA_pN_A)$standard.errors
+p_ctqPA_pN_A <- (1-pnorm(abs(z_ctqPA_pN_A), 0, 1))*2
+
+#r)PRS_CS + CTQ PA + PANSSN
+prscs_ctqPA_pT_A <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_PA) + scale(PANSSN_baseline) + scale(Age), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqPA_pT_A_summary <- summary(prscs_ctqPA_pT_A)
+z_prscs_ctqPA_pT_A <- summary(prscs_ctqPA_pT_A)$coefficients/summary(prscs_ctqPA_pT_A)$standard.errors
+p_prscs_ctqPA_pT_A <- (1-pnorm(abs(z_prscs_ctqPA_pT_A), 0, 1))*2
+
+#r)PRS_CS + CTQ PA + PANSST
+prscs_ctqPA_pT_A <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_PA) + scale(PANSST_baseline) + scale(Age), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscs_ctqPA_pT_A_summary <- summary(prscs_ctqPA_pT_A)
+z_prscs_ctqPA_pT_A <- summary(prscs_ctqPA_pT_A)$coefficients/summary(prscs_ctqPA_pT_A)$standard.errors
+p_prscs_ctqPA_pT_A <- (1-pnorm(abs(z_prscs_ctqPA_pT_A), 0, 1))*2
+
+
+#model evaluation
+#ldpred_ctq5_p3_aic <- ldpred_ctq5_p3_summary[["AIC"]]
+#ldpred_ctq5_aic <- ldpred_ctq5_summary[["AIC"]]
+#ldpred_ctqT_pT_aic <- ldpred_ctqT_pT_summary[["AIC"]]
+#ldpred_p3_aic <- ldpred_p3_summary[["AIC"]]
+#ldpred_ctqT_p3_aic <- ldpred_ctqT_p3_summary[["AIC"]]
+#ldpred_ctq5_pT_aic <- ldpred_ctq5_pT_summary[["AIC"]]
+#ctqT_pT_aic <- ctqT_pT_summary[["AIC"]]
+#ctqT_p3_aic <- ctqT_p3_summary[["AIC"]]
+#pT_aic <- pT_summary[["AIC"]]
+#p3_aic <- p3_summary[["AIC"]]
+#ctq5_aic <- ctq5_summary[["AIC"]]
+#ctq5_pT_aic <- ctq5_pT_summary[["AIC"]]
+#ctq5_p3_aic <- ctq5_p3_summary[["AIC"]]
+
+#main_4_aic <- rbind(ldpred_ctq5_p3_aic, ldpred_ctq5_aic, ldpred_ctqT_pT_aic, ldpred_p3_aic, ldpred_ctqT_p3_aic, ldpred_ctq5_pT_aic, ctqT_pT_aic, ctqT_p3_aic, pT_aic, p3_aic, ctq5_aic, ctq5_pT_aic, ctq5_p3_aic)
+#write.table(main_4_aic, file = "main_4_aic.txt", row.names = T, col.names = F, sep = " ", quote = FALSE)
+
+#get AICc for each model
+models <- list(ldpred_ctqPA_pT_A, ctqPA_p3_A, ctqPA_pN_A, ctqPA_pN_A, prscs_ctqPA_pT_A, prscs_ctq5, prscs_ctqT, prscs_ctqSA, prscs_ctqPA, prscs_pT, prscs_p3, prscs_pP, prscs_pN, prscs_pG, prscs_pPN, prscs_pPG, prscs_pNG, prscs_ctqT_pT, prscs_ctqT_p3, prscs_ctqT_pP, prscs_ctqT_pN, prscs_ctqT_pG, prscs_ctq5_pT, prscs_ctq5_p3, prscs_ctq5_pP, prscs_ctq5_pN, prscs_ctq5_pG, prscs_ctqSA_pT, prscs_ctqSA_p3, prscs_ctqSA_pP, prscs_ctqSA_pN, prscs_ctqSA_pG, prscs_ctqPA_pT, prscs_ctqPA_p3, prscs_ctqPA_pP, prscs_ctqPA_pN, prscs_ctqPA_pG, ldpred_ctq5, ldpred_ctqT, ldpred_ctqSA, ldpred_ctqPA, ldpred_pT, ldpred_p3, ldpred_pP, ldpred_pN, ldpred_pG, ldpred_pPN, ldpred_pPG, ldpred_pNG, pT, p3, pP, pN, pG, pPG, pPN, pNG, ctqT, ctq5, ctqSA, ctqPA, ctqT_pT, ctqT_p3, ctq5_pT, ctq5_p3, ctqT_pP, ctqT_pN, ctqT_pG, ctq5_pP, ctq5_pN, ctq5_pG, ctqSA_pP, ctqSA_pN, ctqSA_pG, ctqPA_pP, ctqPA_pN, ctqPA_pG, ctqSA_pT, ctqPA_pT, ctqSA_p3, ctqPA_p3, ldpred_ctqT_pT, ldpred_ctqT_p3, ldpred_ctqT_pP, ldpred_ctqT_pN, ldpred_ctqT_pG, ldpred_ctq5_pT, ldpred_ctq5_p3, ldpred_ctq5_pP, ldpred_ctq5_pN, ldpred_ctq5_pG, ldpred_ctqSA_pT, ldpred_ctqSA_p3, ldpred_ctqSA_pP, ldpred_ctqSA_pN, ldpred_ctqSA_pG, ldpred_ctqPA_pT, ldpred_ctqPA_p3, ldpred_ctqPA_pP, ldpred_ctqPA_pN, ldpred_ctqPA_pG)
+model.names <- c('ldpred_ctqPA_pT_A', 'ctqPA_p3_A', 'ctqPA_pN_A', 'ctqPA_pN_A', 'prscs_ctqPA_pT_A', 'prscs_ctq5', 'prscs_ctqT', 'prscs_ctqSA', 'prscs_ctqPA', 'prscs_pT', 'prscs_p3', 'prscs_pP', 'prscs_pN', 'prscs_pG', 'prscs_pPN', 'prscs_pPG', 'prscs_pNG', 'prscs_ctqT_pT', 'prscs_ctqT_p3', 'prscs_ctqT_pP', 'prscs_ctqT_pN', 'prscs_ctqT_pG', 'prscs_ctq5_pT', 'prscs_ctq5_p3', 'prscs_ctq5_pP', 'prscs_ctq5_pN', 'prscs_ctq5_pG', 'prscs_ctqSA_pT', 'prscs_ctqSA_p3', 'prscs_ctqSA_pP', 'prscs_ctqSA_pN', 'prscs_ctqSA_pG', 'prscs_ctqPA_pT', 'prscs_ctqPA_p3', 'prscs_ctqPA_pP', 'prscs_ctqPA_pN', 'prscs_ctqPA_pG', 'ldpred_ctq5', 'ldpred_ctqT', 'ldpred_ctqSA', 'ldpred_ctqPA', 'ldpred_pT', 'ldpred_p3', 'ldpred_pP', 'ldpred_pN', 'ldpred_pG', 'ldpred_pPN', 'ldpred_pPG', 'ldpred_pNG', 'pT', 'p3', 'pP', 'pN', 'pG', 'pPG', 'pPN', 'pNG', 'ctqT', 'ctq5', 'ctqSA', 'ctqPA', 'ctqT_pT', 'ctqT_p3', 'ctq5_pT', 'ctq5_p3', 'ctqT_pP', 'ctqT_pN', 'ctqT_pG', 'ctq5_pP', 'ctq5_pN', 'ctq5_pG', 'ctqSA_pP', 'ctqSA_pN', 'ctqSA_pG', 'ctqPA_pP', 'ctqPA_pN', 'ctqPA_pG', 'ctqSA_pT', 'ctqPA_pT', 'ctqSA_p3', 'ctqPA_p3', 'ldpred_ctqT_pT', 'ldpred_ctqT_p3', 'ldpred_ctqT_pP', 'ldpred_ctqT_pN', 'ldpred_ctqT_pG', 'ldpred_ctq5_pT', 'ldpred_ctq5_p3', 'ldpred_ctq5_pP', 'ldpred_ctq5_pN', 'ldpred_ctq5_pG', 'ldpred_ctqSA_pT', 'ldpred_ctqSA_p3', 'ldpred_ctqSA_pP', 'ldpred_ctqSA_pN', 'ldpred_ctqSA_pG', 'ldpred_ctqPA_pT', 'ldpred_ctqPA_p3', 'ldpred_ctqPA_pP', 'ldpred_ctqPA_pN', 'ldpred_ctqPA_pG')
+main_4_models_aicc <- aictab(cand.set = models, modnames = model.names)
+write.table(main_4_models_aicc, file = "PIPELINE_models_scaled_AGE_aicc.txt", row.names = T, col.names = F, sep = " ", quote = FALSE)
+
+
+
+#redo top model with different reference classes
+#reference class B
+PRSc$prog <- relevel(PRSc$kml3d_BIC_4, ref = "B")
+#s)prscs + CTQ PA + PANSS(3)
+prscsB_ctqPA_p3 <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_PA) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscsB_ctqPA_p3_summary <- summary(prscsB_ctqPA_p3)
+z_prscsB_ctqPA_p3 <- summary(prscsB_ctqPA_p3)$coefficients/summary(prscsB_ctqPA_p3)$standard.errors
+p_prscsB_ctqPA_p3 <- (1-pnorm(abs(z_prscsB_ctqPA_p3), 0, 1))*2
+
+#reference class C
+PRSc$prog <- relevel(PRSc$kml3d_BIC_4, ref = "C")
+#s)prscs + CTQ PA + PANSS(3)
+prscsC_ctqPA_p3 <- multinom(prog ~ scale(PRS_CS) + scale(CTQ_PA) + scale(PANSSP_baseline) + scale(PANSSN_baseline) + scale(PANSSG_baseline), data = PRSc, na.action = na.omit, maxit = 800, MaxNWts = 2000) 
+prscsC_ctqPA_p3_summary <- summary(prscsC_ctqPA_p3)
+z_prscsC_ctqPA_p3 <- summary(prscsC_ctqPA_p3)$coefficients/summary(prscsC_ctqPA_p3)$standard.errors
+p_prscsC_ctqPA_p3 <- (1-pnorm(abs(z_prscsC_ctqPA_p3), 0, 1))*2
+
+#get p-values and coefficients of top model
+p_prscsB_ctqPA_p3
+p_prscsC_ctqPA_p3
+coef(prscsB_ctqPA_p3)
+coef(prscsC_ctqPA_p3)
+exp(coef(prscsB_ctqPA_p3))
+exp(coef(prscsC_ctqPA_p3))
+
+
+
+
+
